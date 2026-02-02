@@ -120,6 +120,31 @@ else
 
 fi
 
+# Verify the kernel build directory exists
+kernel_build_dir=""
+if [ -d /lib/modules/${UNAME}/build ]; then
+	kernel_build_dir="/lib/modules/${UNAME}/build"
+elif [ -d /usr/src/kernels/${UNAME} ]; then
+	kernel_build_dir="/usr/src/kernels/${UNAME}"
+else
+	echo "Error: Cannot find kernel build directory!"
+	echo "Expected: /lib/modules/${UNAME}/build or /usr/src/kernels/${UNAME}"
+	if [ $isfedora -ge 1 ]; then
+		echo "On Fedora, please ensure kernel-devel is properly installed:"
+		echo "sudo dnf install kernel-devel-${UNAME}"
+	fi
+	exit 1
+fi
+
+echo "Using kernel build directory: $kernel_build_dir"
+
+# On Fedora, create the symlink if it doesn't exist and we found the kernels source directory
+if [ $isfedora -ge 1 ] && [ ! -e /lib/modules/${UNAME}/build ] && [ -d /usr/src/kernels/${UNAME} ]; then
+	echo "Creating symlink /lib/modules/${UNAME}/build -> /usr/src/kernels/${UNAME}"
+	mkdir -p /lib/modules/${UNAME}
+	ln -sf /usr/src/kernels/${UNAME} /lib/modules/${UNAME}/build
+fi
+
 # note that the update_dir definition below relies on a symbolic link of /lib to /usr/lib on Arch
 cur_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
 build_dir='build'
@@ -135,6 +160,10 @@ update_dir="/lib/modules/${UNAME}/updates"
 if [ $isfedora -ge 1 ]; then
 	echo "Ensure the patch package is installed"
 	[[ ! $(command -v patch) ]] && dnf install -y patch
+	
+	# Also ensure kernel-devel is installed on Fedora
+	echo "Ensuring kernel-devel package is installed"
+	dnf install -y kernel-devel
 fi
 
 isubuntu=0

@@ -4,6 +4,8 @@ This is a kernel driver for sound on Macs with Cirrus 8409 HDA chips.
 Sound output is now reasonably complete and integrated with Linux.
 Sound input still needs work.
 
+**Updated to work with Fedora 43 Workstation**
+
 
 It will play audio through Internal speakers or headphones.
 
@@ -70,7 +72,8 @@ Compiling and installing driver:
 
 **fedora package install**
 ```
-dnf install gcc kernel-devel make patch wget
+dnf install gcc make patch wget
+sudo dnf install kernel-devel-$(uname -r)
 ```
 **ubuntu package install**  
 ```

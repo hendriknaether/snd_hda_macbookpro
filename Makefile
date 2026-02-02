@@ -5,12 +5,21 @@ KBUILD_EXTRA_CFLAGS = "-DAPPLE_PINSENSE_FIXUP -DAPPLE_CODECS -DCONFIG_SND_HDA_RE
 
 
 ifdef KERNELRELEASE
-	KERNELDIR := /lib/modules/$(KERNELRELEASE)
+	KERNEL_REL := $(KERNELRELEASE)
 else
-	KERNELDIR := /lib/modules/$(shell uname -r)
+	KERNEL_REL := $(shell uname -r)
 endif
 
-KERNELBUILD := $(KERNELDIR)/build
+# Try to find the kernel build directory - check multiple locations for different distros
+KERNELBUILD := $(shell \
+	if [ -d "/lib/modules/$(KERNEL_REL)/build" ]; then \
+		echo "/lib/modules/$(KERNEL_REL)/build"; \
+	elif [ -d "/usr/src/kernels/$(KERNEL_REL)" ]; then \
+		echo "/usr/src/kernels/$(KERNEL_REL)"; \
+	else \
+		echo "/lib/modules/$(KERNEL_REL)/build"; \
+	fi \
+)
 
 all:
 	make -C $(KERNELBUILD) CFLAGS_MODULE=$(KBUILD_EXTRA_CFLAGS) M=$(shell pwd)/build/hda modules
